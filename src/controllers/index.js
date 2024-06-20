@@ -1,5 +1,8 @@
 const PostsService = require('../services/posts');
+const CommentsService = require('../services/comments');
+
 const postService = new PostsService();
+const commentsService = new CommentsService()
 
 class PostsController {
     async getPosts () {
@@ -12,8 +15,12 @@ class PostsController {
      * @param {number} id 
      */
     async getPost (id) {
-        const post = await postService.getPost(id);
-        return post;
+        const [post, comments] = await Promise.all([
+            postService.getPost(id),
+            commentsService.getComments(id)
+        ])
+
+        return { ...post, comments };
     }
 }
 

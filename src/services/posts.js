@@ -26,6 +26,7 @@ class PostsService {
 
             posts.push({
                 id: post.id,
+                authorId: post.authorId,
                 title: post.title
             })
         }
@@ -50,7 +51,8 @@ class PostsService {
         return {
             id: data.id,
             title: data.title,
-            text: data.text
+            text: data.text,
+            authorId: data.authorId
         };
     }
 }

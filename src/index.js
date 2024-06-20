@@ -1,5 +1,5 @@
 const fastify = require("fastify");
-const PostsController = require("./controllers");
+const PostsController = require("./controllers/posts");
 
 const app = fastify({
     logger: true

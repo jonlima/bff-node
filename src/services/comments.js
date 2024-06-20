@@ -27,7 +27,8 @@ class CommentsService {
 
             comments.push({
                 id: comment.id,
-                text: comment.text
+                text: comment.text,
+                userId: comment.userId
             })
         }
 

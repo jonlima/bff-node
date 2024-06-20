@@ -1,19 +1,19 @@
-class PostsController {
-    constructor () {}
+const PostsService = require('../services/posts');
+const postService = new PostsService();
 
+class PostsController {
     async getPosts () {
-        return [
-            { id: 1},
-            { id: 2}
-        ]
+        const posts = await postService.getPosts();
+        return posts;
     }
 
     /**
      * 
-     * @param {*} id 
+     * @param {number} id 
      */
     async getPost (id) {
-        return { id: 1 }
+        const post = await postService.getPost(id);
+        return post;
     }
 }
 

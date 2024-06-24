@@ -29,29 +29,34 @@ class PostsController {
      * @param {number} id 
      */
     async getPost (id) {
-        // Fetch data
-        const [post, comments] = await Promise.all([
-            postService.getPost(id),
-            commentsService.getComments(id)
-        ])
+        try {
+            // Fetch data
+            const [post, comments] = await Promise.all([
+                postService.getPost(id),
+                commentsService.getComments(id)
+            ])
 
-        // Mount user ids
-        const userIds = new Set([post.authorId]);
-        for (const comment of comments) {
-            userIds.add(comment.userId);
+            // Mount user ids
+            const userIds = new Set([post.authorId]);
+            for (const comment of comments) {
+                userIds.add(comment.userId);
+            }
+
+            // Fetch users
+            const users = await usersService.getUsers([...userIds]);
+
+            // Transform user date
+            post.author = users.get(post.authorId);
+            for (const comment of comments) {
+                comment.user = users.get(comment.userId);
+                comment.userId = undefined;
+            }
+
+            return { ...post, authorId: undefined, comments };
+        } catch (error) {
+            console.log(error);
+            throw new Error('Fail to fetch post');
         }
-
-        // Fetch users
-        const users = await usersService.getUsers([...userIds]);
-
-        // Transform user date
-        post.author = users.get(post.authorId);
-        for (const comment of comments) {
-            comment.user = users.get(comment.userId);
-            comment.userId = undefined;
-        }
-
-        return { ...post, authorId: undefined, comments };
     }
 }
 

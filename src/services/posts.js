@@ -1,10 +1,10 @@
-const { Client } = require('undici');
+const Http = require('../utils/http');
 
 class PostsService {
     #client;
 
     constructor () {
-        this.#client = new Client('http://localhost:3001');
+        this.#client = new Http('http://localhost:3001');
     }
 
     /**
@@ -14,12 +14,10 @@ class PostsService {
      */
     async getPosts (limit = 5) {
         const posts = [];
-        const response = await this.#client.request({
+        const data = await this.#client.request({
             method: 'GET',
             path: '/posts'
-        });
-
-        const data = await response.body.json();
+        }, { timeout: 5000 });
         
         for (const post of data) {
             if (posts.length >= limit) continue;
@@ -41,12 +39,11 @@ class PostsService {
      */
     async getPost (id) {
         const posts = [];
-        const response = await this.#client.request({
+        const data = await this.#client.request({
             method: 'GET',
             path: `/posts/${id}`
-        });
+        }, { timeout: 5000 });
 
-        const data = await response.body.json();
 
         return {
             id: data.id,

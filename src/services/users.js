@@ -1,10 +1,10 @@
-const { Client } = require('undici');
+const Http = require('../utils/http');
 
 class UsersService {
     #client;
 
     constructor () {
-        this.#client = new Client('http://localhost:3003');
+        this.#client = new Http('http://localhost:3003');
     }
 
     /**
@@ -13,12 +13,11 @@ class UsersService {
      * @returns 
      */
     async getUsers(ids) {
-        const request = await this.#client.request({
+        const data = await this.#client.request({
             method: 'GET',
             path: '/users',
             query: { id: ids }
-        });
-        const data = await request.body.json();
+        }, { timeout: 5000 });
 
         const users = new Map();
         for (const user of data) {
@@ -29,11 +28,10 @@ class UsersService {
     }
 
     async getUser(id) {
-        const request = await this.#client.request({
+        const data = await this.#client.request({
             method: 'GET',
             path: `/users/${id}`
-        });
-        const data = await request.body.json();
+        }, { timeout: 2000 });
 
         return data;
     }

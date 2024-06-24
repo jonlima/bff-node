@@ -12,5 +12,8 @@
   "dependencies": {
     "fastify": "^4.28.0",
     "undici": "^6.19.2"
+  },
+  "devDependencies": {
+    "json-server": "^0.17.4"
   }
 }

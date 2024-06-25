@@ -11,7 +11,8 @@ class CommentsService {
         this.#cbGetComments = new CircuitBreaker(async (postId, limit = 5) => {
             const comments = [];
 
-            const key = `comments:${id}:limit-${limit}`;
+            const key = `comments:${postId}:limit-${limit}`;
+            const stalekey = `comments-stale:${postId}:limit-${limit}`;
             const dataFromCache = await redis.get(key);
             if (dataFromCache) return JSON.parse(dataFromCache);
 
@@ -31,14 +32,25 @@ class CommentsService {
                 })
             }
 
-            await redis.set(key, JSON.stringify(comments), 'EX', 60);
+            await redis
+                .pipeline()
+                .set(key, JSON.stringify(comments), 'EX', 60)
+                .set(stalekey, JSON.stringify(comments), 'EX', 6000)
+                .exec()
+
             return comments;
         }, {
             errorThresholdPercentage: 10,
             resetTimeout: 10000,
             timeout: 1000
         });
-        this.#cbGetComments.fallback(() => []);
+        this.#cbGetComments.fallback(async (postId, limit = 5) => {
+            const stalekey = `comments-stale:${postId}:limit-${limit}`;
+            const dataFromCache = await redis.get(stalekey);
+            if (dataFromCache) return JSON.parse(dataFromCache);
+
+            return [];
+        });
     }
 
     /**

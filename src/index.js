@@ -2,7 +2,7 @@ const fastify = require("fastify");
 const PostsController = require("./controllers/posts");
 
 const app = fastify({
-    logger: true
+    logger: false
 });
 
 const postsController = new PostsController();

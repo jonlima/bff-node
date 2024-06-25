@@ -1,5 +1,6 @@
 const CircuitBreaker = require('opossum');
 const Http = require('../utils/http');
+const redis = require('../utils/redis');
 
 class CommentsService {
     #client;
@@ -9,6 +10,11 @@ class CommentsService {
         this.#client = new Http('http://localhost:3002');
         this.#cbGetComments = new CircuitBreaker(async (postId, limit = 5) => {
             const comments = [];
+
+            const key = `comments:${id}:limit-${limit}`;
+            const dataFromCache = await redis.get(key);
+            if (dataFromCache) return JSON.parse(dataFromCache);
+
             const data = await this.#client.request({
                 method: 'GET',
                 path: '/comments',
@@ -25,6 +31,7 @@ class CommentsService {
                 })
             }
 
+            await redis.set(key, JSON.stringify(comments), 'EX', 60);
             return comments;
         }, {
             errorThresholdPercentage: 10,

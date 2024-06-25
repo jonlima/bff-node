@@ -10,18 +10,19 @@ class PostsController {
     async getPosts () {
         const posts = await postService.getPosts();
 
-        const authorIds = new Set();
-        for (const post of posts) {
-            authorIds.add(post.authorId);
-        }
+        const resultPromise = posts.map(async (post) => {
+            const user = await usersService.getUser(post.authorId);
 
-        const users = await usersService.getUsers([...authorIds]);
-        for (const post of posts) {
-            post.author = users.get(post.authorId);
-            post.authorId = undefined;
-        }
+            return {
+                ...post,
+                authorId: undefined,
+                author: user.name
+            }
+        });
 
-        return posts;
+        const result = await Promise.all(resultPromise);
+
+        return result;
     }
 
     /**
@@ -30,29 +31,29 @@ class PostsController {
      */
     async getPost (id) {
         try {
-            // Fetch data
             const [post, comments] = await Promise.all([
                 postService.getPost(id),
                 commentsService.getComments(id)
-            ])
+            ]);
 
-            // Mount user ids
-            const userIds = new Set([post.authorId]);
-            for (const comment of comments) {
-                userIds.add(comment.userId);
-            }
+            const postAuthor = await usersService.getUser(post.authorId);
+            const commentsPromise = comments.map(async (comment) => {
+                const commentAuthor = await usersService.getUser(comment.userId);
 
-            // Fetch users
-            const users = await usersService.getUsers([...userIds]);
+                return {
+                    ...comment,
+                    user: commentAuthor.name,
+                    userId: undefined
+                }
+            });
 
-            // Transform user date
-            post.author = users.get(post.authorId);
-            for (const comment of comments) {
-                comment.user = users.get(comment.userId);
-                comment.userId = undefined;
-            }
-
-            return { ...post, authorId: undefined, comments };
+            const commentsData = await Promise.all(commentsPromise);
+            return { 
+                ...post, 
+                author: postAuthor,
+                authorId: undefined, 
+                comments: commentsData
+            };
         } catch (error) {
             console.log(error);
             throw new Error('Fail to fetch post');
